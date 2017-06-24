@@ -1,0 +1,13 @@
+x64/
+Release/
+Debug/
+ipch/
+*.sdf
+.vs/
+*Debug/
+*Release/
+*debug*/
+*release*/
+*.db
+build_vs2015/
+build_linux/
