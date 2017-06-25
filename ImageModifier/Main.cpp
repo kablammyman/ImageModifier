@@ -70,19 +70,53 @@ void parseArgs(int argc, const char * argv[], string &inputFile, string &outputD
 		}
 	}//end for loop
 }
+//---------------------------------------------------------------------------------------------------
 unsigned int GetRandomNum(int min, int max)
 {
 	unsigned int diff = ((max - min) + 1);
 	return ((diff * rand()) / RAND_MAX) + min;
 }
-/*SDL_Surface* SDL_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
+//---------------------------------------------------------------------------------------------------
+float GetRandomFloat(float min, float max)
 {
-	for (Sint32 y = 0; y < Surface->h; y++) //Run across all Y pixels.
-		for (Sint32 x = 0; x < Surface->w; x++) //Run across all X pixels.
-			for (Sint32 o_y = 0; o_y < _stretch_factor_y; ++o_y) //Draw _stretch_factor_y pixels for each Y pixel.
-				for (Sint32 o_x = 0; o_x < _stretch_factor_x; ++o_x) //Draw _stretch_factor_x pixels for each X pixel.
-					DrawPixel(_ret, static_cast<Sint32>(_stretch_factor_x * x) + o_x,static_cast<Sint32>(_stretch_factor_y * y) + o_y, ReadPixel(Surface, x, y));
-}*/
+	return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
+}
+//---------------------------------------------------------------------------------------------------
+RGBA GetPixelsAvgColor(PIXMAP *bmp, int x, int y, int w, int h)
+{
+
+	RGBA *runner;
+	int r = 0,g = 0,b = 0,a = 0; //use ints so we dont have to worry about overflow when adding
+	int counter = 0;
+	for (unsigned int uiV = y; uiV < (y + h); ++uiV)
+	{
+		// reset coordinate for each row
+		runner = &bmp->pixels[uiV * bmp->w + x];
+
+		// read each row
+		for (unsigned int uiH = x; uiH < (x + w); ++uiH)
+		{
+			r += runner->r; 
+			g += runner->g;
+			b += runner->b;
+			a += runner->a;
+			runner++;
+			counter++;
+		}
+	}
+	r += (counter/2);
+	g += (counter / 2);
+	b += (counter / 2);
+	a += (counter / 2);
+
+	r /= counter;
+	g /= counter;
+	b /= counter;
+	a /= counter;
+
+	return RGBA{(unsigned char)r,(unsigned char)g,(unsigned char)b,(unsigned char)a};
+}
+//---------------------------------------------------------------------------------------------------
 int main(int argc, const char * argv[])
 {
 	string inputFile, outputDir;
@@ -93,8 +127,12 @@ int main(int argc, const char * argv[])
 	PIXMAP *img2 = new PIXMAP(10, 10);
 	PIXMAP *photo;
 	bool showImageWindow = false;
+	bool addBorder = true;
+	unsigned char *finalImageRawPixels;
 
-	int iBitDepth = 8, iWidth = 256, iHeight = 128;
+	srand(time(0));
+
+
 	parseArgs(argc, argv, inputFile, outputDir, waterMarkText);
 
 	if (inputFile.empty())
@@ -145,6 +183,7 @@ int main(int argc, const char * argv[])
 		printf("couldnt load image: %s\n", inputFile.c_str());
 		return -1;
 	}
+
 	photo = new PIXMAP(imgData, bw, bh);
 	//once the data ahs been copied into our class, get rid of raw data
 	stbi_image_free(imgData);
@@ -155,6 +194,12 @@ int main(int argc, const char * argv[])
 		printf("couldnt convert image into PIXMAP: %s\n", inputFile.c_str());
 		return -1;
 	}
+
+	
+	bw *= GetRandomFloat(0.5f, 1.5f);
+	bh *= GetRandomFloat(0.5f, 1.5f);
+	
+	photo->Scale(bw, bh);
 
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_Window * window;
@@ -167,29 +212,62 @@ int main(int argc, const char * argv[])
 		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, bw, bh);
 	}
 
-
-	//add watermark text in random spot
-	//add random "noise" or change color of a few random pixels as water mark"
-	//change size of image
-	//add border?
-	srand(time(0));
-	if (!waterMarkText.empty())
-	{
-		StockBitmapFont testFont;
-		int xPos = GetRandomNum(0, bw - 1);
-		int yPos = GetRandomNum(0, bh - 1);
-		testFont.Draw(photo, waterMarkText, xPos, yPos, true);
-	}
 	
 
-	for (int i = 0; i < 100; i++)
+	if (!waterMarkText.empty())
 	{
-		int pix = GetRandomNum(0,(bw*bh)-1);
-		photo->pixels[pix] = RGBA{255,0,255,255};
+		for (int i = 0; i < 10; i++)
+		{
+			StockBitmapFont testFont;
+			int xPos = GetRandomNum(0, bw - 1);
+			int yPos = GetRandomNum(0, bh - 1);
+			testFont.Draw(photo, waterMarkText, xPos, yPos, true);
+		}
 	}
-	unsigned char *temp = (unsigned char *)photo->pixels;
+	
+	for (int i = 0; i < 50; i++)
+	{
+		int pix = GetRandomNum(0, (bw * bh));
+		photo->pixels[pix] = RGBA{ (unsigned char)GetRandomNum(0,255),(unsigned char)GetRandomNum(0,255),(unsigned char)GetRandomNum(0,255),255};
+
+		int xx = GetRandomNum(0, (bw - 10)); 
+		int yy = GetRandomNum(0, (bh - 10));
+
+		RGBA col = GetPixelsAvgColor(photo, xx, yy, 8, 8);
+		StockBitmapFont testFont(col);
+		testFont.Draw(photo, "X", xx, yy, true);
+	}
+
+	//do we want to add a border?
+	if(GetRandomNum(0, 100) > 50)
+		addBorder = false;
+
+	
+	if (addBorder)
+	{
+		int borderSize = GetRandomNum(10, 20);
+		PIXMAP *border = new PIXMAP(photo->w + borderSize, photo->h + borderSize);
+
+		//do we want to add a border?
+		if (GetRandomNum(0, 100) > 50)
+			border->Fill(RGBA{ (unsigned char)GetRandomNum(0,255),(unsigned char)GetRandomNum(0,255),(unsigned char)GetRandomNum(0,255),255 });
+		else
+		{
+			for (int i = 0; i < border->w; i++)
+				for (int j = 0; j < border->h; j++)
+					border->PutPixel(RGBA{ (unsigned char)GetRandomNum(0,255),(unsigned char)GetRandomNum(0,255),(unsigned char)GetRandomNum(0,255),255 }, i, j);
+		}
+
+		photo->Blit(border, borderSize/2, borderSize/2);
+		finalImageRawPixels = (unsigned char *)border->pixels;
+		bw = border->w;
+		bh = border->h;
+	}
+	else
+		finalImageRawPixels = (unsigned char *)photo->pixels;
+	
 	//4th param = comp, which is 1=Y, 2=YA, 3=RGB, 4=RGBA.
-	stbi_write_png(destFile.c_str(), bw, bh, 4, temp, bw * sizeof(Uint32));
+	stbi_write_png(destFile.c_str(), bw, bh, 4, finalImageRawPixels, bw * sizeof(Uint32));
 	
 	if (showImageWindow)
 	{
@@ -199,7 +277,7 @@ int main(int argc, const char * argv[])
 
 		while (!quit)
 		{
-			SDL_UpdateTexture(texture, NULL, photo->pixels, bw * sizeof(Uint32));
+			SDL_UpdateTexture(texture, NULL, finalImageRawPixels, bw * sizeof(Uint32));
 			SDL_WaitEvent(&event);
 
 			switch (event.type)
