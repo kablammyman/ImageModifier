@@ -128,6 +128,7 @@ int main(int argc, const char * argv[])
 	PIXMAP *photo;
 	bool showImageWindow = false;
 	bool addBorder = true;
+	bool addTint = true;
 	unsigned char *finalImageRawPixels;
 
 	srand(time(0));
@@ -212,8 +213,40 @@ int main(int argc, const char * argv[])
 		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, bw, bh);
 	}
 
-	
+	//do we want to add a color tint?
+	if (GetRandomNum(0, 100) > 50)
+		addTint = false;
+	if (addTint)
+	{
+		int amt = GetRandomNum(10,50);
+		int gun = GetRandomNum(0, 90);
 
+		for (int i = 0; i < (bw * bh); i++)
+		{
+			if (gun >= 0 && gun <= 30)
+			{
+				if (photo->pixels[i].r < (255 - amt))
+					photo->pixels[i].r += amt;
+				else
+					photo->pixels[i].r = 255;
+			}
+			else if (gun >= 31 && gun <= 60)
+			{
+				if (photo->pixels[i].g < (255 - amt))
+					photo->pixels[i].g += amt;
+				else
+					photo->pixels[i].g = 255;
+			}
+			else
+			{
+				if (photo->pixels[i].b < (255 - amt))
+					photo->pixels[i].b += amt;
+				else
+					photo->pixels[i].b = 255;
+			}
+		}
+	}
+	//add the water mark if there is one
 	if (!waterMarkText.empty())
 	{
 		for (int i = 0; i < 10; i++)
@@ -225,6 +258,7 @@ int main(int argc, const char * argv[])
 		}
 	}
 	
+	//add random "transparent marks" to change up some pixels even more
 	for (int i = 0; i < 50; i++)
 	{
 		int pix = GetRandomNum(0, (bw * bh));
@@ -242,7 +276,6 @@ int main(int argc, const char * argv[])
 	if(GetRandomNum(0, 100) > 50)
 		addBorder = false;
 
-	
 	if (addBorder)
 	{
 		int borderSize = GetRandomNum(10, 20);
