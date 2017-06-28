@@ -130,6 +130,11 @@ int main(int argc, const char * argv[])
 	bool addBorder = true;
 	bool addTint = true;
 	unsigned char *finalImageRawPixels;
+#if _WIN32
+	char slash = '\\';
+#else
+	slash '/';
+#endif
 
 	srand(time(0));
 
@@ -145,20 +150,19 @@ int main(int argc, const char * argv[])
 
 	std::size_t found = inputFile.find_last_of(".");
 	fileExt = inputFile.substr(found + 1);
-
+	
+	
 	if (outputDir.empty())
 	{
 		outputDir = inputFile.substr(0, inputFile.find_last_of("/\\") + 1);
 	}
 
-	if (outputDir.back() != '\\' && outputDir.back() != '/' && outputDir.find_last_of(".") == string::npos)
+	if (outputDir.back() != slash && outputDir.find_last_of(".") == string::npos)
 	{
-#if _WIN32
-		outputDir += "\\";
-#else
-		outputDir += "/";
-#endif
+		outputDir += slash;
 	}
+
+	
 
 	if (outputDir.find_last_of(".") == string::npos)
 		outputFileNameOnly = inputFile.substr(inputFile.find_last_of("/\\") + 1);
@@ -169,9 +173,13 @@ int main(int argc, const char * argv[])
 	}
 	outputFileNameOnly = outputFileNameOnly.substr(0, outputFileNameOnly.find_last_of("."));//remove file ext
 
+	//if the dest file is in a differnt dir than src file, dont add a modfied marker
+	string inputDir = inputFile.substr(0, inputFile.find_last_of("/\\") + 1);
 
-	destFile = outputDir + "modified_" + outputFileNameOnly + ".png";
-
+	if(outputDir == inputDir)
+		destFile = outputDir + "modified_" + outputFileNameOnly + ".png";
+	else
+		destFile = outputDir + outputFileNameOnly + ".png";
 
 	string inputFileExt = inputFile.substr(inputFile.find_last_of(".") + 1);//remove file ext 
 	
