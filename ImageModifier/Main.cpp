@@ -124,7 +124,7 @@ int main(int argc, const char * argv[])
 	string destFile;
 	string fileExt;
 	string waterMarkText;
-	PIXMAP *img2 = new PIXMAP(10, 10);
+	PIXMAP *border;
 	PIXMAP *photo;
 	bool showImageWindow = false;
 	bool addBorder = true;
@@ -281,13 +281,13 @@ int main(int argc, const char * argv[])
 	}
 
 	//do we want to add a border?
-	if(GetRandomNum(0, 100) > 50)
+	//if(GetRandomNum(0, 100) > 50)
 		addBorder = false;
 
 	if (addBorder)
 	{
 		int borderSize = GetRandomNum(10, 20);
-		PIXMAP *border = new PIXMAP(photo->w + borderSize, photo->h + borderSize);
+		border = new PIXMAP(photo->w + borderSize, photo->h + borderSize);
 
 		//do we want to add a border?
 		if (GetRandomNum(0, 100) > 50)
@@ -303,12 +303,18 @@ int main(int argc, const char * argv[])
 		finalImageRawPixels = (unsigned char *)border->pixels;
 		bw = border->w;
 		bh = border->h;
+		
 	}
 	else
 		finalImageRawPixels = (unsigned char *)photo->pixels;
 	
 	//4th param = comp, which is 1=Y, 2=YA, 3=RGB, 4=RGBA.
 	stbi_write_png(destFile.c_str(), bw, bh, 4, finalImageRawPixels, bw * sizeof(Uint32));
+	
+	if (addBorder)
+		border->Destroy();
+	photo->Destroy();
+	finalImageRawPixels = nullptr;
 	
 	if (showImageWindow)
 	{

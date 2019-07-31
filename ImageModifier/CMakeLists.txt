@@ -47,4 +47,5 @@ add_executable(ImageModifier ${SOURCES})
 
 
 target_link_libraries (ImageModifier debug   ${SDL2_64_LIB} ${SDL2MAIN_64_LIB} ${MY_GAME_LIB_64_D}  )
+target_link_libraries (ImageModifier optimized   ${SDL2_64_LIB} ${SDL2MAIN_64_LIB} ${MY_GAME_LIB_64_R}  )
 #optimized ${SDL2_64_LIB} ${SDL2MAIN_64_LIB} ${SDL2_TTF_64_LIB} ${SDL2_IMAGE_64_LIB} ${MY_STRING_LIB_64_R} ${MY_GAME_LIB_64_R} ${MY_FILE_LIB_64_R} ${MY_CFG_LIB_64_R} )
