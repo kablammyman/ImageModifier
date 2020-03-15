@@ -2,7 +2,7 @@
 #undef main
 //#include "SDL_ttf.h"
 #include "SDL_syswm.h"
-#include <SDL_image.h>
+//#include <SDL_image.h>
 
 #include <stdio.h>
 #include <string>
