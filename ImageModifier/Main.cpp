@@ -133,7 +133,7 @@ int main(int argc, const char * argv[])
 #if _WIN32
 	char slash = '\\';
 #else
-	char slash '/';
+	char slash = '/';
 #endif
 
 	srand(time(0));
